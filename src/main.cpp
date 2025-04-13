@@ -92,4 +92,11 @@ int main(int argc, char* argv[]) {
     }
     output_file << std::endl;
     output_file.close();
+
+    std::cout << "Solution vector x:" << std::endl;
+    for (int i = 0; i < n; ++i) {
+        std::cout << std::setprecision(6) << std::fixed << x[i] << " ";
+    }
+
+    std::cout << std::endl;
 }
