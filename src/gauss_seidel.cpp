@@ -3,8 +3,9 @@
 #include <iostream>
 
 #include "utils.h"
+#include "gauss_seidel.h"
 
-void run_gs(const matrix& A, const vector<float>& b, vector<float>& x, int max_iter = 1000, float tol = 1e-6, float x_0 = 0.0) {
+void run_gs(const matrix& A, const vector<float>& b, vector<float>& x, int max_iter, float tol, float x_0) {
     int n = A.size();
     vector<float> x_old(n, x_0); 
     float error;

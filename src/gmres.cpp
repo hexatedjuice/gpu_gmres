@@ -4,8 +4,8 @@ void run_gmres(
     const matrix& A, 
     const vector<float>& b, 
     vector<float>& x, 
-    int max_iter = 1000, 
-    float tol = 1e-6
+    int max_iter, 
+    float tol
 ) {
     int n = A.size();
     vector<float> r = subtract_vectors(b, matrix_vec_mult(A, x));  // init residual
