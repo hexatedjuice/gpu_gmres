@@ -8,6 +8,7 @@
 #include "jacobi.h"
 #include "gauss_seidel.h"
 #include "gmres.h"
+#include "gpu_gmres.h"
 
 int main(int argc, char* argv[]) {
     std::string input_filename = "input.txt";
@@ -41,42 +42,75 @@ int main(int argc, char* argv[]) {
 
     int n;
     input_file >> n;
-    matrix A(n, vector<double>(n));
-    vector<double> b(n);
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            input_file >> A[i][j];
+    matrix A;
+    vector<double> b;
+    // Initialize solution vector x
+    vector<double> x;
+    double* h_A;
+    double* h_b;
+    double* h_x;
+    if(method == "gpu_gmres") {
+        h_A = new double[n * n];
+        h_b = new double[n];
+        h_x = new double[n];
+
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                input_file >> h_A[IDX(i, j, n)];
+            }
+        }
+    
+        for (int i = 0; i < n; ++i) {
+            input_file >> h_b[i];
+        }
+
+        for (int i = 0; i < n; ++i) {
+            h_x[i] = 0.0; 
+        }
+    } else {
+        A.resize(n, vector<double>(n));
+        b.resize(n);
+        x.resize(n, 0.0); // Initialize x to zero
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                input_file >> A[i][j];
+            }
+        }
+    
+        for (int i = 0; i < n; ++i) {
+            input_file >> b[i];
         }
     }
 
-    for (int i = 0; i < n; ++i) {
-        input_file >> b[i];
-    }
     input_file.close();
 
-    std::cout << "Matrix A:" << std::endl;
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            std::cout << std::setprecision(6) << std::fixed << A[i][j] << " ";
+    if (method == "gpu_gmres") {
+
+    } else {
+        std::cout << "Matrix A:" << std::endl;
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                std::cout << std::setprecision(6) << std::fixed << A[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "Vector b:" << std::endl;
+        for (int i = 0; i < n; ++i) {
+            std::cout << std::setprecision(6) << std::fixed << b[i] << " ";
         }
         std::cout << std::endl;
     }
-    std::cout << "Vector b:" << std::endl;
-    for (int i = 0; i < n; ++i) {
-        std::cout << std::setprecision(6) << std::fixed << b[i] << " ";
-    }
-    std::cout << std::endl;
 
-    // Initialize solution vector x
-    vector<double> x(n, 0.0);
-    
     if(method == ("jacobi")) {
         run_jacobi(A, b, x);
     } else if(method == "gs") {
         run_gs(A, b, x);
     } else if(method == "gmres") {
         run_gmres(A, b, x);
-    } else {
+    } else if(method == "gpu_gmres") {
+        run_gpu_gmres(h_A, h_b, h_x, n);
+    } 
+    else {
         std::cerr << "Unknown method: " << method << std::endl;
         return 1;
     }
@@ -87,15 +121,29 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error opening output file: " << output_filename << std::endl;
         return 1;
     }
-    for (int i = 0; i < n; ++i) {
-        output_file << std::setprecision(6) << std::fixed << x[i] << " ";
+
+    if (method == "gpu_gmres") {
+        for (int i = 0; i < n; ++i) {
+            output_file << std::setprecision(6) << std::fixed << h_x[i] << " ";
+        }
+    } else {
+        for (int i = 0; i < n; ++i) {
+            output_file << std::setprecision(6) << std::fixed << x[i] << " ";
+        }
     }
     output_file << std::endl;
     output_file.close();
 
-    std::cout << "Solution vector x:" << std::endl;
-    for (int i = 0; i < n; ++i) {
-        std::cout << std::setprecision(6) << std::fixed << x[i] << " ";
+    if (method == "gpu_gmres") {
+        std::cout << "Solution vector x:" << std::endl;
+        for (int i = 0; i < n; ++i) {
+            std::cout << std::setprecision(6) << std::fixed << h_x[i] << " ";
+        }
+    } else {
+        std::cout << "Solution vector x:" << std::endl;
+        for (int i = 0; i < n; ++i) {
+            std::cout << std::setprecision(6) << std::fixed << x[i] << " ";
+        }
     }
 
     std::cout << std::endl;

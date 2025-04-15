@@ -6,77 +6,24 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
-// Error checking macros for CUDA and cuBLAS.
-#define CHECK_CUDA(call)                                                    \
-  do {                                                                      \
-    cudaError_t err = (call);                                               \
-    if(err != cudaSuccess) {                                                \
-      fprintf(stderr, "CUDA error at %s:%d code=%d(%s)\n",                  \
-              __FILE__, __LINE__, err, cudaGetErrorString(err));            \
-      exit(EXIT_FAILURE);                                                   \
-    }                                                                       \
-  } while(0)
-
-#define CHECK_CUBLAS(call)                                                  \
-  do {                                                                      \
-    cublasStatus_t status = (call);                                         \
-    if(status != CUBLAS_STATUS_SUCCESS) {                                   \
-      fprintf(stderr, "cuBLAS error at %s:%d\n", __FILE__, __LINE__);        \
-      exit(EXIT_FAILURE);                                                   \
-    }                                                                       \
-  } while(0)
-
-#define IDX(i, j, size) ((i) + (j)*(size))
+#include "gpu_gmres.h"
 
 //nvcc gpu_gmres2.cpp  -lcublas -lcusparse && ./a.out 
-int main() {
+void run_gpu_gmres(double* h_A, double* h_b, double* h_x, int n, int restart, int max_iter, double tol) {
     // ---------------------
     // Parameters and Setup
     // ---------------------
     // const int N = 1000;        // Dimension of A (N x N)
 
-    const int restart = 50;      // GMRES restart parameter.
-    const int max_iter = 1000;   // Maximum overall iterations.
-    const double tol = 1e-12;     // Convergence tolerance.
-
-    std::string input_filename = "input.txt";
-    std::string output_filename = "output.txt";
-
-    std::ifstream input_file(input_filename);
-    if (!input_file) {
-        std::cerr << "Error opening input file: " << input_filename << std::endl;
-        return 1;
-    }
-
-    int n;
-    input_file >> n;
+    // const int restart = 50;      // GMRES restart parameter.
+    // const int max_iter = 1000;   // Maximum overall iterations.
+    // const double tol = 1e-12;     // Convergence tolerance.
 
     int N = n;
     // ---------------------
     // Allocate and Initialize Host Data
     // ---------------------
     // For a dense matrix, we assume A is stored in column–major order as required by cuBLAS.
-    // double *h_A = (double*)malloc(N * N * sizeof(double));
-    double* h_A = new double[n * n];
-    double* h_b = new double[n];
-    double* h_x = new double[n];
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            input_file >> h_A[IDX(i, j, n)];
-        }
-    }
-
-    for (int i = 0; i < n; i++) {
-        input_file >> h_b[i];
-    }
-    input_file.close();
-
-
-    for (int i = 0; i < N; i++) {
-        h_x[i] = 0.0; 
-    }
-
     double *d_A, *d_b, *d_x;
     CHECK_CUDA(cudaMalloc((void**)&d_A, N * N * sizeof(double)));
     CHECK_CUDA(cudaMalloc((void**)&d_b, N * sizeof(double)));
@@ -138,6 +85,8 @@ int main() {
     // ---------------------
     // GMRES Iteration
     // ---------------------
+    // while (iter < max_iter && !converged) {
+    //     int j = 0;
     int iter = 0;
     bool converged = false;
     int j = 0;
@@ -236,11 +185,6 @@ int main() {
         h_e1[j+1] = -s * h_e1[j] + c * h_e1[j+1];
         h_e1[j] = temp_e;
         // Check convergence: if the residual norm is small, we can exit.
-
-        std::cout << "Iteration " << j << std::endl;
-        for (int p = 0; p <= j + 1; p++) {
-            std::cout << "I " << p << ": " << h_e1[p] << std::endl;
-        }
         
         if (fabs(h_e1[j+1]) < tol) {
             j++;
@@ -276,21 +220,22 @@ int main() {
     }
     free(y);
 
-    // ---------------------
-    // Retrieve the Final Solution
-    // ---------------------
+    // if (j < restart)
+    //         converged = true;
+    //     else {
+    //         // Otherwise, one may recompute the residual, restart and iterate.
+    //         break;
+    //     }
+
+
     CHECK_CUDA(cudaMemcpy(h_x, d_x, N*sizeof(double), cudaMemcpyDeviceToHost));
-    // The vector h_x now contains the computed approximate solution.
     printf("Final solution x:\n");
     for (int i = 0; i < N; i++) {
         printf("%f ", h_x[i]);
     }
     printf("\n");
 
-    
-    free(h_A);
-    free(h_b);
-    free(h_x);
+
     free(h_H);
     free(h_cs);
     free(h_sn);
@@ -301,6 +246,4 @@ int main() {
     cudaFree(d_V);
     cudaFree(d_tempVec);
     cublasDestroy(cublasHandle);
-    
-    return 0;
 }

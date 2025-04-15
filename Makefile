@@ -1,11 +1,11 @@
 # Compiler
-CXX = g++
+CXX = nvcc
 
 # Compiler flags
-CXXFLAGS = -Wall  -std=c++17 -g
+CXXFLAGS =  -std=c++17 -g
 
 # Linker flags (if needed)
-LDFLAGS =
+LDFLAGS = -lcublas -lcusparse
 
 # Source files located in src/ directory
 SRCS = $(wildcard src/*.cpp)
