@@ -5,14 +5,14 @@
 #include "utils.h"
 #include "gauss_seidel.h"
 
-void run_gs(const matrix& A, const vector<float>& b, vector<float>& x, int max_iter, float tol, float x_0) {
+void run_gs(const matrix& A, const vector<double>& b, vector<double>& x, int max_iter, double tol, double x_0) {
     int n = A.size();
-    vector<float> x_old(n, x_0); 
-    float error;
+    vector<double> x_old(n, x_0); 
+    double error;
 
     for (int iter = 0; iter < max_iter; iter++) {
         for (int i = 0; i < n; i++) {
-            float sum = b[i];
+            double sum = b[i];
 
             for (int j = 0; j < n; j++) {
                 if (i != j) {

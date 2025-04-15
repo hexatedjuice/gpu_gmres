@@ -2,9 +2,9 @@
 
 void run_jacobi(
     const matrix& A, 
-    const vector<float>& b, 
-    vector<float>& x, 
+    const vector<double>& b, 
+    vector<double>& x, 
     int max_iter = 1000, 
-    float tol = 1e-6, 
-    float x_0 = 0.0
+    double tol = 1e-6, 
+    double x_0 = 0.0
 );

@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
 
     int n;
     input_file >> n;
-    matrix A(n, vector<float>(n));
-    vector<float> b(n);
+    matrix A(n, vector<double>(n));
+    vector<double> b(n);
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             input_file >> A[i][j];
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl;
 
     // Initialize solution vector x
-    vector<float> x(n, 0.0);
+    vector<double> x(n, 0.0);
     
     if(method == ("jacobi")) {
         run_jacobi(A, b, x);
