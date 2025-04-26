@@ -1,5 +1,8 @@
+#ifdef USE_GPU
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 

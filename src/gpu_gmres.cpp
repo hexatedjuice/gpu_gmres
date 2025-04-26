@@ -193,7 +193,7 @@ void run_gpu_gmres(double* h_A, double* h_b, double* h_x, int n, int restart, in
     } // end inner loop
 
 
-    std::cout << "GMRES converged in " << j << " iterations." << std::endl;
+    // std::cout << "GMRES converged in " << j << " iterations." << std::endl;
     // ---------------------
     // Solve the Least Squares Problem
     // ---------------------
@@ -209,9 +209,9 @@ void run_gpu_gmres(double* h_A, double* h_b, double* h_x, int n, int restart, in
         y[i] /= h_H[i + i*(restart+1)];
     }
 
-    for (int i = 0; i < dim; i++) {
-        std::cout << "y[" << i << "] = " << y[i] << std::endl;
-    }
+    // for (int i = 0; i < dim; i++) {
+    //     std::cout << "y[" << i << "] = " << y[i] << std::endl;
+    // }
 
     // Update the approximate solution: x = x + V(:,1:dim)*y.
     for (int i = 0; i < dim; i++) {
@@ -229,11 +229,11 @@ void run_gpu_gmres(double* h_A, double* h_b, double* h_x, int n, int restart, in
 
 
     CHECK_CUDA(cudaMemcpy(h_x, d_x, N*sizeof(double), cudaMemcpyDeviceToHost));
-    printf("Final solution x:\n");
-    for (int i = 0; i < N; i++) {
-        printf("%f ", h_x[i]);
-    }
-    printf("\n");
+    // printf("Final solution x:\n");
+    // for (int i = 0; i < N; i++) {
+    //     printf("%f ", h_x[i]);
+    // }
+    // printf("\n");
 
 
     free(h_H);

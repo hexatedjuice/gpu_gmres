@@ -2,3 +2,5 @@ obj/*
 matrix_solver
 test
 a.out
+in/*
+out/*
